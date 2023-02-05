@@ -19,19 +19,28 @@ class Client(discord.Client):
             type=discord.ActivityType.watching, name="Netflix")
 
 
-async def send_message(message, user_message):
-    await message.response.defer()
+async def send_message(interaction, user_message, k=0):
+    await interaction.response.defer()
     try:
-        if isinstance(user_message, str):
+        if k == 0:
             dalle_instance = Dalle(prompt=user_message)
             dalle_instance.generate_from_prompt()
-            await message.followup.send(
+            await interaction.followup.send(
                 f'`{user_message}`', file=discord.File(f'output\\{user_message}.png')
             )
-        else:
+        elif k == 1:
             msg = 'image_variation'
             input_path = f'input\\{msg}.png'
-            await user_message.save(input_path)
+            pic_extensions = ['.jpg', '.png', '.jpeg']
+            found_pic = False
+            for ext in pic_extensions:
+                if user_message.filename.endswith(ext):
+                    found_pic = True
+                    await user_message.save(input_path)
+            if not found_pic:
+                await interaction.followup.send('Error: File is not an image!')
+                logger.warning('Error: File is not an image')
+                return
             with Image.open(input_path) as im:
                 width, height = im.size
                 max_size = max(width, height)
@@ -43,13 +52,17 @@ async def send_message(message, user_message):
             dalle_instance = Dalle(input_image=input_path)
             dalle_instance.create_image_variation()
             logger.info(
-                f'\x1b[31m{message.user}\x1b[0m : Successfully created image variation!'
+                f'\x1b[31m{interaction.user}\x1b[0m : Successfully created image variation!'
             )
-            await message.followup.send(
-                f'`Here is a variation of the image:`', file=discord.File(f'output\\{msg}.png')
+            await interaction.followup.send(
+                '`Here is a variation of the image:`', file=discord.File(f'output\\{msg}.png')
             )
+        else:
+            await interaction.followup.send("Error: Something went wrong!")
+            logger.warning('Error: Invalid k value')
+
     except Exception as e:
-        await message.followup.send("Error: Something went wrong!")
+        await interaction.followup.send("Error: Something went wrong!")
         logger.exception(f"Error: {e}")
 
 
@@ -68,7 +81,7 @@ def run_bot():
         logger.info(
             f"\x1b[31m{interaction.user}\x1b[0m : '{message}' ({interaction.channel})"
         )
-        await send_message(interaction, message)
+        await send_message(interaction, message, 0)
 
     @client.tree.command(name="var", description="Ask the AI to create a variation")
     async def dalle_var(interaction, *, file: discord.Attachment):
@@ -77,7 +90,7 @@ def run_bot():
         logger.info(
             f'\x1b[31m{interaction.user}\x1b[0m : ({interaction.channel})'
         )
-        await send_message(interaction, file)
+        await send_message(interaction, file, 1)
 
     TOKEN = os.getenv('DISCORD_BOT_TOKEN')
     client.run(TOKEN)
