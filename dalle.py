@@ -13,6 +13,7 @@ class Dalle:
         self._input_image = input_image
         self._image_url = None
         self._prompt = prompt
+        self._mask = None
         self._response = None
         self.initialize_api()
 
@@ -20,34 +21,40 @@ class Dalle:
         load_dotenv()
         openai.api_key = os.getenv('OPENAI_KEY')
 
-    def generate_image(self):
+    def _generate_image(self):
         self._response = openai.Image.create(
             prompt=self._prompt,
             n=self._n_images,
             size=f'{self._img_size}x{self._img_size}',
         )
 
-    def image_variation(self):
+    def _image_variation(self):
         self._response = openai.Image.create_variation(
             image=open(self._input_image, 'rb'),
             n=self._n_images,
             size=f'{self._img_size}x{self._img_size}',
         )
 
-    def get_url_from_response(self):
-        self._image_url = self._response['data'][0]['url']
+    def _create_edit_with_mask(self):
+        self._response = openai.Image.create_edit(
+            image=open(self._input_image, 'rb'),
+            mask=open(self._mask, 'rb'),
+            prompt='A sunlit indoor lounge area with a pool containing a flamingo',
+            n=self._n_images,
+            size=f'{self._img_size}x{self._img_size}',
+        )
 
     def save_url_as_image(self):
-        self.get_url_from_response()
+        self._image_url = self._response['data'][0]['url']
         if not os.path.isdir(self._output_location):
             os.mkdir(self._output_location)
         file_name = f'{self._output_location}\\{self._prompt}.png'
         urllib.request.urlretrieve(self._image_url, file_name)
 
     def generate_from_prompt(self):
-        self.generate_image()
+        self._generate_image()
         self.save_url_as_image()
 
     def create_image_variation(self):
-        self.image_variation()
+        self._image_variation()
         self.save_url_as_image()

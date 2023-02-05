@@ -4,6 +4,3 @@ venv/
 .env
 input/*
 output/*
-!input/image_x.png
-!output/image_x.png
-!output/spongebob_chess.png

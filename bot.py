@@ -11,6 +11,13 @@ load_dotenv()
 logger = setup(__name__)
 
 
+def find_image(msg):
+    pic_extensions = ['.jpg', '.png', '.jpeg']
+    for ext in pic_extensions:
+        if msg.filename.endswith(ext):
+            return True
+
+
 class Client(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
@@ -31,13 +38,9 @@ async def send_message(interaction, user_message, k=0):
         elif k == 1:
             msg = 'image_variation'
             input_path = f'input\\{msg}.png'
-            pic_extensions = ['.jpg', '.png', '.jpeg']
-            found_pic = False
-            for ext in pic_extensions:
-                if user_message.filename.endswith(ext):
-                    found_pic = True
-                    await user_message.save(input_path)
-            if not found_pic:
+            if find_image(user_message):
+                await user_message.save(input_path)
+            else:
                 await interaction.followup.send('Error: File is not an image!')
                 logger.warning('Error: File is not an image')
                 return
