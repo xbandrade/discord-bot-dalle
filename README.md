@@ -4,8 +4,9 @@ A discord bot that uses OpenAI's DALL·E 2 API to generate AI images from a text
 
 
 ## Slash Commands
-* `/dalle [message]` - Generates an image from a text prompt
-* `/var [image]` - Creates a variation of the image sent
+* `/dalle [prompt]` - Generate an image from the text prompt
+* `/var [image]` - Create a variation of the image sent
+* `/edit [original_image] [mask] [prompt]` - Generate a completion to transparent areas in [mask] from the text prompt
 
 
 ## Setup
