@@ -6,14 +6,14 @@ from dotenv import load_dotenv
 
 
 class Dalle:
-    def __init__(self, prompt='image_variation', input_image=None, img_size=256, n_images=1):
+    def __init__(self, prompt='image_variation', mask=None, input_image=None, img_size=256, n_images=1):
         self._output_location = './output'
         self._img_size = img_size
         self._n_images = n_images
         self._input_image = input_image
         self._image_url = None
         self._prompt = prompt
-        self._mask = None
+        self._mask = mask
         self._response = None
         self.initialize_api()
 
@@ -35,11 +35,11 @@ class Dalle:
             size=f'{self._img_size}x{self._img_size}',
         )
 
-    def _create_edit_with_mask(self):
+    def _edit_with_mask(self):
         self._response = openai.Image.create_edit(
             image=open(self._input_image, 'rb'),
             mask=open(self._mask, 'rb'),
-            prompt='A sunlit indoor lounge area with a pool containing a flamingo',
+            prompt=self._prompt,
             n=self._n_images,
             size=f'{self._img_size}x{self._img_size}',
         )
@@ -57,4 +57,8 @@ class Dalle:
 
     def create_image_variation(self):
         self._image_variation()
+        self.save_url_as_image()
+
+    def create_edit_from_mask(self):
+        self._edit_with_mask()
         self.save_url_as_image()
